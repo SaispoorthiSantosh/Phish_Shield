@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>PhishShield</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <h1>🛡️ PhishShield</h1>
+
+    <h3>
+        AI Powered Phishing Email Detector
+    </h3>
+
+
+    <!-- Email Input -->
+
+    <textarea
+        id="emailText"
+        rows="10"
+        placeholder="Paste suspicious email here..."
+    ></textarea>
+
+
+    <br><br>
+
+
+    <!-- Analyze Button -->
+
+    <button onclick="analyzeEmail()">
+        Analyze Email
+    </button>
+
+
+    <br><br>
+
+
+    <!-- Result Box -->
+
+    <div class="result-box">
+
+        <h2>Scan Result</h2>
+
+
+        <!-- Risk Circle -->
+
+        <div class="risk-circle">
+
+            <span id="risk">
+                0%
+            </span>
+
+        </div>
+
+
+        <!-- Basic Results -->
+
+        <p>
+            <strong>Risk Score:</strong>
+            <span id="riskScore">
+                0%
+            </span>
+        </p>
+
+
+        <p>
+            <strong>Status:</strong>
+            <span id="status">
+                Waiting for scan...
+            </span>
+        </p>
+
+
+        <p>
+            <strong>Threat Level:</strong>
+            <span id="threat">
+                None
+            </span>
+        </p>
+
+
+        <!-- AI Confidence -->
+
+        <p>
+            <strong>AI Confidence:</strong>
+            <span id="confidence">
+                0%
+            </span>
+        </p>
+
+
+        <!-- Link Detection -->
+
+        <p>
+            <strong>Links Detected:</strong>
+            <span id="links">
+                0
+            </span>
+        </p>
+
+
+        <!-- Urgency Detection -->
+
+        <p>
+            <strong>Urgency Detected:</strong>
+            <span id="urgency">
+                No
+            </span>
+        </p>
+
+
+        <!-- Money / Prize Detection -->
+
+        <p>
+            <strong>Prize/Money Content:</strong>
+            <span id="money">
+                No
+            </span>
+        </p>
+
+
+        <!-- Reasons -->
+
+        <h3>
+            🔍 Detection Reasons
+        </h3>
+
+        <ul id="reasons">
+
+            <li>
+                No suspicious indicators detected.
+            </li>
+
+        </ul>
+
+
+        <!-- Recommendation -->
+
+        <h3>
+            🛡️ Security Recommendation
+        </h3>
+
+        <p id="recommendation">
+
+            Waiting for analysis...
+
+        </p>
+
+    </div>
+
+</div>
+
+
+<script>
+
+async function analyzeEmail() {
+
+    const email =
+        document.getElementById("emailText").value;
+
+
+    // Check empty email
+
+    if (email.trim() === "") {
+
+        alert("Please enter an email first.");
+
+        return;
+
+    }
+
+
+    try {
+
+        const response = await fetch("/predict", {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                email: email
+
+            })
+
+        });
+
+
+        const result =
+            await response.json();
+
+
+        // Error handling
+
+        if (!response.ok) {
+
+            alert(result.error);
+
+            return;
+
+        }
+
+
+        // -----------------------------
+        // Risk
+        // -----------------------------
+
+        document.getElementById("risk")
+            .innerText =
+            result.risk + "%";
+
+
+        document.getElementById("riskScore")
+            .innerText =
+            result.risk + "%";
+
+
+        // -----------------------------
+        // Status
+        // -----------------------------
+
+        document.getElementById("status")
+            .innerText =
+            result.status;
+
+
+        // -----------------------------
+        // Threat
+        // -----------------------------
+
+        document.getElementById("threat")
+            .innerText =
+            result.threat;
+
+
+        // -----------------------------
+        // AI Confidence
+        // -----------------------------
+
+        document.getElementById("confidence")
+            .innerText =
+            result.confidence + "%";
+
+
+        // -----------------------------
+        // Links
+        // -----------------------------
+
+        document.getElementById("links")
+            .innerText =
+            result.link_count;
+
+
+        // -----------------------------
+        // Urgency
+        // -----------------------------
+
+        document.getElementById("urgency")
+            .innerText =
+            result.urgency ? "Yes" : "No";
+
+
+        // -----------------------------
+        // Money / Prize
+        // -----------------------------
+
+        document.getElementById("money")
+            .innerText =
+            result.money_related ? "Yes" : "No";
+
+
+        // -----------------------------
+        // Risk Circle Color
+        // -----------------------------
+
+        const circle =
+            document.querySelector(
+                ".risk-circle"
+            );
+
+
+        if (result.threat === "High") {
+
+            circle.style.borderColor =
+                "red";
+
+        }
+
+        else if (result.threat === "Medium") {
+
+            circle.style.borderColor =
+                "orange";
+
+        }
+
+        else {
+
+            circle.style.borderColor =
+                "lime";
+
+        }
+
+
+        // -----------------------------
+        // Reasons
+        // -----------------------------
+
+        const reasonList =
+            document.getElementById(
+                "reasons"
+            );
+
+
+        reasonList.innerHTML = "";
+
+
+        result.reasons.forEach(
+            function(reason) {
+
+                const li =
+                    document.createElement("li");
+
+                li.innerText = reason;
+
+                reasonList.appendChild(li);
+
+            }
+        );
+
+
+        // -----------------------------
+        // Recommendation
+        // -----------------------------
+
+        document.getElementById(
+            "recommendation"
+        ).innerText =
+            result.recommendation;
+
+
+    }
+
+    catch (error) {
+
+        alert(
+            "Unable to connect to the server."
+        );
+
+        console.error(error);
+
+    }
+
+}
+
+</script>
+
+
+</body>
+
+</html>
